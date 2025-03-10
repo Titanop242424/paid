@@ -22,9 +22,9 @@ waiting_users = set()  # Track users waiting for an attack to finish
 ADMIN_ID = 7163028849  # Replace with your admin's Telegram ID
 
 # Define default values
-DEFAULT_PACKET_SIZE = 1024
-DEFAULT_THREADS = 10
-MAX_ATTACK_TIME = 60  # in seconds
+DEFAULT_PACKET_SIZE = 512
+DEFAULT_THREADS = 750
+MAX_ATTACK_TIME = 240  # in seconds
 
 # Kolkata timezone
 KOLKATA_TZ = pytz.timezone('Asia/Kolkata')
@@ -522,7 +522,7 @@ async def dispose_unredeemed_keys():
         await asyncio.sleep(3600)  # Check every hour
 
 def main():
-    application = Application.builder().token("7413722350:AAEBSrOE31ij_OELB0eFgFTM1EO5r5v0dHs").build()
+    application = Application.builder().token("8022705558:AAHNho8teEshiW-rlGhtqnFO2wQPNXX0hUA").build()
 
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", help))
